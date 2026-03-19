@@ -8,30 +8,33 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # API
-    API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "AML Diagnostic System"
-    VERSION: str = "1.0.0"
+    API_V1_STR: str
+    PROJECT_NAME: str
+    VERSION: str
     
     # CORS
-    BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+    BACKEND_CORS_ORIGINS: str
 
     # Database
-    DATABASE_HOST: str = "localhost"
-    DATABASE_PORT: int = 3306
-    DATABASE_USER: str = "root"
-    DATABASE_PASSWORD: str = ""
-    DATABASE_NAME: str = "aml_diagnostic"
+    DB_HOST: str
+    DB_PORT: int
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_NAME: str
+    DB_SSL_CA: str | None = None
     
     # File Storage
-    UPLOAD_DIR: str = "uploads"
-    MAX_FILE_SIZE: int = 10485760  # 10MB
+    UPLOAD_DIR: str
+    MAX_FILE_SIZE: int
+    MODEL_DIR: str
+
+    # Hugging Face
+    HF_REPO_ID: str | None = None
+    HF_TOKEN: str | None = None
     
-    # Models
-    MODEL_DIR: str = "models"
-    
-    model_config = {
-        "env_file": ".env",
-        "case_sensitive": True
-    }
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+        extra = "ignore"
 
 settings = Settings()

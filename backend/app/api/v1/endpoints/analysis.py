@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List
@@ -8,22 +9,46 @@ import joblib
 import numpy as np
 import pandas as pd
 import shap
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
 from app.db.database import get_db
 from app.models.patient import AnalysisResult, CBCData, Image, Patient
+from fastapi import APIRouter, Depends, HTTPException
+from huggingface_hub import hf_hub_download
+from sqlalchemy.orm import Session
 
 router = APIRouter()
+
+# -------------------------------------------------------------------
+# Hugging Face model download
+# -------------------------------------------------------------------
+
+HF_REPO_ID = os.getenv("HF_REPO_ID", "mazharul5868/aml-lgbm-fusion")
+HF_TOKEN   = os.getenv("HF_TOKEN", None)
+
+def _download(filename: str) -> Path:
+    local_dir = Path("ml_models")
+    local_dir.mkdir(exist_ok=True)
+    local_path = local_dir / filename
+    if local_path.exists():
+        print(f"Using cached {filename}")
+        return local_path
+    print(f"Downloading {filename} from Hugging Face...")
+    downloaded = hf_hub_download(
+        repo_id=HF_REPO_ID,
+        filename=filename,
+        token=HF_TOKEN,
+        local_dir=str(local_dir),
+    )
+    print(f"Downloaded {filename}")
+    return Path(downloaded)
 
 # -------------------------------------------------------------------
 # Model + artifact loading
 # -------------------------------------------------------------------
 
-FUSION_MODEL_PATH = Path("ml_models/lgbm_gbdt_fusion.pkl")
-FUSION_COLUMNS_PATH = Path("ml_models/fusion_columns.pkl")
-LABEL_ENCODER_PATH = Path("ml_models/label_encoder.pkl")
-PREPROCESSING_CONFIG_PATH = Path("ml_models/preprocessing_config.json")
+FUSION_MODEL_PATH         = _download("lgbm_gbdt_fusion.pkl")
+FUSION_COLUMNS_PATH       = _download("fusion_columns.pkl")
+LABEL_ENCODER_PATH        = _download("label_encoder.pkl")
+PREPROCESSING_CONFIG_PATH = _download("preprocessing_config.json")
 
 FUSION_MODEL = None
 FUSION_COLUMNS: List[str] = []
@@ -374,7 +399,8 @@ def run_fusion_prediction(X: pd.DataFrame) -> Dict[str, Any]:
     control_prob = float(proba[control_idx])
     aml_prob = round(1.0 - control_prob, 6)
 
-    subtype_probs = {
+    # All 5 class probabilities — always returned regardless of prediction
+    all_subtype_probs = {
         cls: float(proba[i])
         for i, cls in enumerate(classes)
         if cls != "control"
@@ -397,7 +423,7 @@ def run_fusion_prediction(X: pd.DataFrame) -> Dict[str, Any]:
         "probabilities": {"control": control_prob, "aml": aml_prob},
         "subtype_prediction": subtype_prediction,
         "subtype_confidence": subtype_confidence,
-        "subtype_probabilities": subtype_probs,
+        "subtype_probabilities": all_subtype_probs,
         "pred_idx": pred_idx,
     }
 

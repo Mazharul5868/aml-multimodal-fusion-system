@@ -192,21 +192,28 @@ const PatientDetails = () => {
   const amlProb = analysis?.probabilities?.aml ?? null;
   const controlProb = analysis?.probabilities?.control ?? null;
 
-  // "Control" relabelled as "Healthy" in the chart
-  const probabilityChartData =
-    amlProb != null && controlProb != null
-      ? [
-          { name: 'Healthy', value: +(controlProb * 100).toFixed(1) },
-          { name: 'AML',     value: +(amlProb * 100).toFixed(1) },
-        ]
-      : [];
+  // Full 5-class chart — works for both AML and Healthy predictions
+  const allClassData = (() => {
+    if (controlProb == null || !analysis?.subtype_probabilities) return [];
 
-  // Sorted so highest probability subtype appears first
-  const subtypeProbData = analysis?.subtype_probabilities
-    ? Object.entries(analysis.subtype_probabilities)
-        .map(([name, value]) => ({ name, value: +(value * 100).toFixed(1) }))
-        .sort((a, b) => b.value - a.value)
-    : [];
+    const healthy = {
+      name: 'Healthy',
+      value: +(controlProb * 100).toFixed(1),
+      isPredict: !isAML,
+      isHealthy: true,
+    };
+
+    const subtypes = Object.entries(analysis.subtype_probabilities).map(
+      ([name, value]) => ({
+        name,
+        value: +(value * 100).toFixed(1),
+        isPredict: name === analysis.subtype_prediction,
+        isHealthy: false,
+      })
+    );
+
+    return [healthy, ...subtypes].sort((a, b) => b.value - a.value);
+  })();
 
   // Extended with category for the SHAP detail table
   const binaryExplainData = analysis?.binary_explanation?.top_features
@@ -371,59 +378,67 @@ const PatientDetails = () => {
               </div>
             </div>
 
-            {/* ── Diagnostic Probability ── */}
-            {probabilityChartData.length > 0 && (
+            {/* ── Unified Class Probability Chart ── */}
+            {allClassData.length > 0 && (
               <div className="chart-card">
                 <div className="chart-header">
-                  <h4 className="chart-title">Diagnostic Probability</h4>
+                  <h4 className="chart-title">Class Probability Distribution</h4>
                   <p className="chart-subtitle">
-                    Predicted probability of AML versus healthy classification
-                  </p>
-                </div>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={probabilityChartData} barSize={56}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 13, fontWeight: 600, fill: '#374151' }} axisLine={false} tickLine={false} />
-                    <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(value) => [`${value}%`, 'Probability']} contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                      {probabilityChartData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.name === 'AML' ? '#dc2626' : '#16a34a'}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {/* ── Subtype Probability (AML only) ── */}
-            {isAML && subtypeProbData.length > 0 && (
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h4 className="chart-title">AML Subtype Probability Distribution</h4>
-                  <p className="chart-subtitle">
-                    Probability assigned to each AML subtype by the multiclass fusion model
+                    Predicted probability across all five classes — Healthy and four AML subtypes
                   </p>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={subtypeProbData} layout="vertical" margin={{ left: 20, right: 30 }}>
+                  <BarChart data={allClassData} layout="vertical" margin={{ left: 20, right: 40 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                    <XAxis type="number" unit="%" domain={[0, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                    <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12, fontWeight: 600, fill: '#374151' }} axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(value) => [`${value}%`, 'Probability']} contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
+                    <XAxis
+                      type="number"
+                      unit="%"
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: '#94a3b8' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={140}
+                      tick={{ fontSize: 12, fontWeight: 600, fill: '#374151' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value) => [`${value}%`, 'Probability']}
+                      contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
+                    />
                     <Bar dataKey="value" radius={[0, 6, 6, 0]}>
-                      {subtypeProbData.map((entry, index) => (
+                      {allClassData.map((entry, index) => (
                         <Cell
-                          key={`cell-sub-${index}`}
-                          fill={entry.name === analysis.subtype_prediction ? '#7c3aed' : '#c4b5fd'}
+                          key={`cell-unified-${index}`}
+                          fill={
+                            entry.isHealthy
+                              ? entry.isPredict ? '#16a34a' : '#86efac'
+                              : entry.isPredict ? '#dc2626' : '#c4b5fd'
+                          }
+                          fillOpacity={entry.isPredict ? 1 : 0.6}
                         />
                       ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                <div className="chart-legend-row">
+                  <span className="chart-legend-item">
+                    <span className="chart-legend-dot" style={{ background: '#dc2626' }}></span>
+                    Predicted AML subtype
+                  </span>
+                  <span className="chart-legend-item">
+                    <span className="chart-legend-dot" style={{ background: '#16a34a' }}></span>
+                    Predicted Healthy
+                  </span>
+                  <span className="chart-legend-item">
+                    <span className="chart-legend-dot" style={{ background: '#c4b5fd', opacity: 0.6 }}></span>
+                    Other AML subtypes
+                  </span>
+                </div>
               </div>
             )}
 

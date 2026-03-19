@@ -28,8 +28,7 @@ backend/venv/
 # -------------------------
 backend/uploads/
 runs/
-backend/ml_models/*.pkl
-backend/ml_models/*.json
+backend/ml_models/
 *.pkl
 *.joblib
 *.h5

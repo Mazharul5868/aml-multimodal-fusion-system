@@ -1,37 +1,54 @@
-import os
+from pathlib import Path
+from urllib.parse import quote_plus
 
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# load environment variable from .env file
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parents[2]
 
-# build the connection
-DB_USER=os.getenv("DATABASE_USER")
-DB_PASSWORD=os.getenv("DATABASE_PASSWORD")
-DB_HOST=os.getenv("DATABASE_HOST")
-DB_PORT=os.getenv("DATABASE_PORT", "3306")
-DB_NAME=os.getenv("DATABASE_NAME")
 
-DATABASE_URL=f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+def resolve_path(path_value: str | None) -> str | None:
+    if not path_value:
+        return None
 
-# create the SQLAlchemy engine
-engine = create_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,
-    pool_recycle=3600,
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = BASE_DIR / path
+
+    return str(path)
+
+DATABASE_URL = (
+    f"mysql+pymysql://{quote_plus(settings.DB_USER)}:"
+    f"{quote_plus(settings.DB_PASSWORD)}@"
+    f"{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
 )
 
-# A factory for individual database sessions
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+ssl_ca = resolve_path(settings.DB_SSL_CA)
+
+connect_args = {}
+if ssl_ca:
+    if not Path(ssl_ca).exists():
+        raise FileNotFoundError(f"SSL CA certificate not found: {ssl_ca}")
+    connect_args["ssl"] = {"ca": ssl_ca}
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args=connect_args,
+)
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+)
 
 Base = declarative_base()
 
-def get_db(): 
+
+def get_db():
     db = SessionLocal()
     try:
         yield db
