@@ -7,6 +7,8 @@ backend/.env
 *.env
 **/.env
 
+backend/init_db.py
+
 # -------------------------
 # Python
 # -------------------------
