@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # aml-multimodal-fusion-system
 =======
 # Multimodal Fusion System for Acute Myeloid Leukaemia (AML) Detection
