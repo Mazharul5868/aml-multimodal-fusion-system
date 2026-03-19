@@ -1,7 +1,0 @@
-{
-  "replace_inf_with_nan": true,
-  "fillna_value": 0,
-  "target_col": "y_label",
-  "id_col": "patient_id",
-  "num_classes": 5
-}

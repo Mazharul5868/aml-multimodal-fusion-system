@@ -29,6 +29,7 @@ backend/venv/
 backend/uploads/
 runs/
 backend/ml_models/*.pkl
+backend/ml_models/*.json
 *.pkl
 *.joblib
 *.h5
@@ -74,3 +75,8 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# -------------------------
+# Docker
+# -------------------------
+backend/.dockerignore
