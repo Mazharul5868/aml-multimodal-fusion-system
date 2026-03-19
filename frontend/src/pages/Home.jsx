@@ -166,19 +166,21 @@ const Home = () => {
           <div className="info-card">
             <h4>System Capabilities</h4>
             <ul className="info-list">
-              <li>Haematology-only classification</li>
-              <li>Morphology-only classification</li>
-              <li>Multimodal fusion (CBC + morphology)</li>
-              <li>Automated quality control</li>
+              <li>AML detection vs healthy classification</li>
+              <li>AML subtype classification (CBFB::MYH11, NPM1, PML::RARA, RUNX1::RUNX1T1)</li>
+              <li>Multimodal fusion — haematology + blood smear morphology</li>
+              <li>SHAP-based feature contribution explanations</li>
+              <li>Re-runnable analysis with result history</li>
             </ul>
           </div>
           <div className="info-card">
             <h4>Model Information</h4>
             <ul className="info-list">
-              <li>Otsu-based image segmentation</li>
-              <li>Morphological feature extraction</li>
-              <li>Patient-wise data splitting</li>
-              <li>Interpretable confidence scores</li>
+              <li>LightGBM GBDT multiclass fusion model</li>
+              <li>Otsu thresholding — cell segmentation and morphological features</li>
+              <li>Sobel gradient and Canny edge texture features</li>
+              <li>Patient-level feature aggregation</li>
+              <li>SHAP TreeExplainer for per-prediction interpretability</li>
             </ul>
           </div>
         </section>

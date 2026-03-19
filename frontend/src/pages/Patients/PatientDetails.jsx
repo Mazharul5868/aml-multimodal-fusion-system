@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+  Bar, BarChart, CartesianGrid, Cell, ReferenceLine,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import './PatientDetails.css';
 
@@ -78,7 +72,7 @@ const PatientDetails = () => {
 
   const prettifyFeatureName = (name) => {
     const map = {
-      leucocytes_per_ul: 'Leucocyte count',
+      leucocytes_per_ul: 'Leucocyte count (WBC)',
       pb_myeloblast: 'Myeloblast count',
       pb_promyelocyte: 'Promyelocyte count',
       pb_myelocyte: 'Myelocyte count',
@@ -93,18 +87,78 @@ const PatientDetails = () => {
       pb_lymph_atyp_neopl: 'Neoplastic atypical lymphocytes',
       pb_other: 'Other cells',
       pb_total: 'Total counted cells',
-      otsu_area_px: 'Cell area',
-      otsu_perimeter_px: 'Cell perimeter',
-      otsu_circularity: 'Cell circularity',
-      otsu_solidity: 'Cell solidity',
-      otsu_eccentricity: 'Cell eccentricity',
-      sobel_mean: 'Texture gradient mean',
-      sobel_std: 'Texture gradient SD',
+      leucocytes_per_ul_missing: 'WBC count (missing indicator)',
+      pb_lymph_atyp_neopl_missing: 'Neoplastic lymphocytes (missing indicator)',
+      otsu_area_px: 'Cell area (morphology)',
+      otsu_perimeter_px: 'Cell perimeter (morphology)',
+      otsu_circularity: 'Cell circularity (morphology)',
+      otsu_solidity: 'Cell solidity (morphology)',
+      otsu_eccentricity: 'Cell eccentricity (morphology)',
+      otsu_cell_area_ratio: 'Cell-to-image area ratio',
+      sobel_mean: 'Gradient intensity (mean)',
+      sobel_std: 'Gradient intensity (SD)',
+      sobel_median: 'Gradient intensity (median)',
+      sobel_p75: 'Gradient intensity (75th pct)',
+      sobel_p90: 'Gradient intensity (90th pct)',
+      sobel_max: 'Gradient intensity (max)',
+      sobel_ring_p95: 'Cell boundary gradient (95th pct)',
+      sobel_interior_mean: 'Cell interior gradient (mean)',
+      sobel_interior_p95: 'Cell interior gradient (95th pct)',
+      sobel_ring_minus_interior: 'Boundary vs interior gradient',
+      sobel_ring_over_interior: 'Boundary/interior gradient ratio',
+      sobel_edge_pixels: 'Sobel edge pixel count',
       sobel_edge_density: 'Sobel edge density',
+      sobel_edge_components: 'Sobel edge components',
       canny_edge_density: 'Canny edge density',
-      canny_ring_density: 'Boundary edge density',
+      canny_edge_components: 'Canny edge components',
+      canny_ring_density: 'Boundary edge density (Canny)',
+      canny_ring_minus_interior: 'Boundary vs interior edges (Canny)',
     };
     return map[name] || name;
+  };
+
+  const getFeatureCategory = (name) => {
+    if (name.startsWith('otsu_')) return 'morphology';
+    if (name.startsWith('sobel_') || name.startsWith('canny_')) return 'texture';
+    if (name.includes('missing')) return 'indicator';
+    return 'haematology';
+  };
+
+  const categoryLabel = {
+    haematology: { label: 'Haematology', color: '#2563eb' },
+    morphology:  { label: 'Morphology',  color: '#7c3aed' },
+    texture:     { label: 'Texture',     color: '#0891b2' },
+    indicator:   { label: 'Indicator',   color: '#94a3b8' },
+  };
+
+  const ShapTooltip = ({ active, payload, label, isAML }) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    const isPositive = d.impact >= 0;
+    // towardAML = true means this feature pushes toward AML
+    const towardAML = isAML ? isPositive : !isPositive;
+    return (
+      <div className={`shap-tooltip ${towardAML ? 'shap-tooltip-aml' : 'shap-tooltip-healthy'}`}>
+        <div className="shap-tooltip-label">{label}</div>
+        <div className="shap-tooltip-row">
+          <span className="shap-tooltip-key">Feature value:</span>
+          <span className="shap-tooltip-val">
+            {d.value != null ? Number(d.value).toFixed(3) : 'N/A'}
+          </span>
+        </div>
+        <div className="shap-tooltip-row">
+          <span className="shap-tooltip-key">SHAP contribution:</span>
+          <span className={`shap-tooltip-shap ${towardAML ? 'shap-tooltip-shap-aml' : 'shap-tooltip-shap-healthy'}`}>
+            {isPositive ? '+' : ''}{d.impact.toFixed(4)}
+          </span>
+        </div>
+        <div className={`shap-tooltip-footer ${towardAML ? 'shap-tooltip-footer-aml' : 'shap-tooltip-footer-healthy'}`}>
+          {isAML
+            ? isPositive ? '▲ Pushes prediction toward AML' : '▼ Pushes prediction toward Healthy'
+            : isPositive ? '▲ Supports Healthy prediction' : '▼ Argues toward AML'}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -137,37 +191,31 @@ const PatientDetails = () => {
   const isAML = analysis?.prediction === 'AML';
   const amlProb = analysis?.probabilities?.aml ?? null;
   const controlProb = analysis?.probabilities?.control ?? null;
-  const binaryExplanation = analysis?.binary_explanation;
-  const subtypeExplanation = analysis?.subtype_explanation;
 
+  // "Control" relabelled as "Healthy" in the chart
   const probabilityChartData =
     amlProb != null && controlProb != null
       ? [
-          { name: 'Control', value: +(controlProb * 100).toFixed(1) },
-          { name: 'AML', value: +(amlProb * 100).toFixed(1) },
+          { name: 'Healthy', value: +(controlProb * 100).toFixed(1) },
+          { name: 'AML',     value: +(amlProb * 100).toFixed(1) },
         ]
       : [];
 
+  // Sorted so highest probability subtype appears first
   const subtypeProbData = analysis?.subtype_probabilities
-    ? Object.entries(analysis.subtype_probabilities).map(([name, value]) => ({
-        name,
-        value: +(value * 100).toFixed(1),
-      }))
+    ? Object.entries(analysis.subtype_probabilities)
+        .map(([name, value]) => ({ name, value: +(value * 100).toFixed(1) }))
+        .sort((a, b) => b.value - a.value)
     : [];
 
+  // Extended with category for the SHAP detail table
   const binaryExplainData = analysis?.binary_explanation?.top_features
     ? analysis.binary_explanation.top_features.map((item) => ({
         name: prettifyFeatureName(item.feature),
+        rawName: item.feature,
         impact: +item.shap_value.toFixed(4),
         value: item.value,
-      }))
-    : [];
-
-  const subtypeExplainData = analysis?.subtype_explanation?.top_features
-    ? analysis.subtype_explanation.top_features.map((item) => ({
-        name: prettifyFeatureName(item.feature),
-        impact: +item.shap_value.toFixed(4),
-        value: item.value,
+        category: getFeatureCategory(item.feature),
       }))
     : [];
 
@@ -296,164 +344,252 @@ const PatientDetails = () => {
           </div>
         ) : (
           <div className="analysis-results">
-            <div className="result-header">
-              <span className="result-icon">✅</span>
-              <span className="result-title">Analysis Complete</span>
-              <span className="result-date">{new Date(analysis.analyzed_at).toLocaleString()}</span>
-            </div>
 
-            <div className="prediction-cards">
-              <div className="prediction-card primary">
-                <div className="prediction-label">Prediction</div>
-                <div className="prediction-value">{analysis.prediction}</div>
-                <div className="confidence-bar">
-                  <div
-                    className="confidence-fill"
-                    style={{ width: `${analysis.confidence * 100}%` }}
-                  ></div>
-                </div>
-                <div className="confidence-label">
-                  Confidence: {(analysis.confidence * 100).toFixed(1)}%
+            {/* ── Prediction Banner ── */}
+            <div className={`prediction-banner ${isAML ? 'banner-aml' : 'banner-healthy'}`}>
+              <div className="banner-left">
+                <div className="banner-icon">{isAML ? '⚠️' : '✅'}</div>
+                <div className="banner-text">
+                  <div className="banner-verdict">{isAML ? 'AML Positive' : 'Healthy'}</div>
+                  <div className="banner-sub">
+                    {isAML
+                      ? analysis.subtype_prediction
+                        ? `Predicted subtype: ${analysis.subtype_prediction}`
+                        : 'Subtype classification unavailable'
+                      : 'No evidence of AML detected'}
+                  </div>
                 </div>
               </div>
-
-              {isAML && analysis.subtype_prediction && (
-                <div className="prediction-card secondary">
-                  <div className="prediction-label">Predicted AML Subtype</div>
-                  <div className="prediction-value">{analysis.subtype_prediction}</div>
-                  <div className="confidence-bar">
-                    <div
-                      className="confidence-fill"
-                      style={{ width: `${analysis.subtype_confidence * 100}%` }}
-                    ></div>
-                  </div>
-                  <div className="confidence-label">
-                    Confidence: {(analysis.subtype_confidence * 100).toFixed(1)}%
-                  </div>
+              <div className="banner-right">
+                <div className="banner-confidence">
+                  {(analysis.confidence * 100).toFixed(1)}%
                 </div>
-              )}
+                <div className="banner-confidence-label">Model confidence</div>
+                <div className="banner-analyzed">
+                  {new Date(analysis.analyzed_at).toLocaleString()}
+                </div>
+              </div>
             </div>
 
+            {/* ── Diagnostic Probability ── */}
             {probabilityChartData.length > 0 && (
               <div className="chart-card">
-                <h4>Diagnostic Probability</h4>
-                <div style={{ width: '100%', height: 260 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={probabilityChartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis unit="%" />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Probability']} />
-                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                        {probabilityChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.name === 'AML' ? '#dc2626' : '#2563eb'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="chart-header">
+                  <h4 className="chart-title">Diagnostic Probability</h4>
+                  <p className="chart-subtitle">
+                    Predicted probability of AML versus healthy classification
+                  </p>
                 </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={probabilityChartData} barSize={56}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" tick={{ fontSize: 13, fontWeight: 600, fill: '#374151' }} axisLine={false} tickLine={false} />
+                    <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value) => [`${value}%`, 'Probability']} contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
+                    <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                      {probabilityChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.name === 'AML' ? '#dc2626' : '#16a34a'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             )}
 
+            {/* ── Subtype Probability (AML only) ── */}
             {isAML && subtypeProbData.length > 0 && (
               <div className="chart-card">
-                <h4>Subtype Probability Distribution</h4>
-                <div style={{ width: '100%', height: 320 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={subtypeProbData} layout="vertical" margin={{ left: 30, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" unit="%" />
-                      <YAxis type="category" dataKey="name" width={120} />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Probability']} />
-                      <Bar dataKey="value" radius={[0, 8, 8, 0]}>
-                        {subtypeProbData.map((_, index) => (
-                          <Cell key={`cell-sub-${index}`} fill="#7c3aed" />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="chart-header">
+                  <h4 className="chart-title">AML Subtype Probability Distribution</h4>
+                  <p className="chart-subtitle">
+                    Probability assigned to each AML subtype by the multiclass fusion model
+                  </p>
                 </div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={subtypeProbData} layout="vertical" margin={{ left: 20, right: 30 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" unit="%" domain={[0, 100]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12, fontWeight: 600, fill: '#374151' }} axisLine={false} tickLine={false} />
+                    <Tooltip formatter={(value) => [`${value}%`, 'Probability']} contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
+                    <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+                      {subtypeProbData.map((entry, index) => (
+                        <Cell
+                          key={`cell-sub-${index}`}
+                          fill={entry.name === analysis.subtype_prediction ? '#7c3aed' : '#c4b5fd'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             )}
 
+            {/* ── SHAP Feature Contributions ── */}
             {binaryExplainData.length > 0 && (
-              <div className="chart-card">
-                <h4>Key Factors Influencing AML Prediction</h4>
-                <p className="explain-note">
-                  Positive values push the model toward AML. Negative values push toward Control.
-                </p>
-                <div style={{ width: '100%', height: 420 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={binaryExplainData} layout="vertical" margin={{ left: 80, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis type="category" dataKey="name" width={180} />
-                      <Tooltip
-                        formatter={(value, name, props) => [
-                          `${value}`,
-                          'SHAP impact',
-                        ]}
-                        labelFormatter={(label) => `${label}`}
+              <>
+                <div className="chart-card">
+                  <div className="chart-header">
+                    <h4 className="chart-title">Feature Contributions to Prediction</h4>
+                    <p className="chart-subtitle">
+                      SHAP values showing how each feature influenced the model's output.
+                      Features are ranked by absolute contribution magnitude.
+                    </p>
+                  </div>
+
+                  <div className="shap-legend">
+                    <div className="shap-legend-item">
+                      <span className={`shap-legend-dot ${isAML ? 'shap-legend-dot-aml' : 'shap-legend-dot-healthy'}`}></span>
+                      <span>{isAML ? 'Increases AML probability' : 'Supports Healthy prediction'}</span>
+                    </div>
+                    <div className="shap-legend-item">
+                      <span className={`shap-legend-dot ${isAML ? 'shap-legend-dot-healthy' : 'shap-legend-dot-aml'}`}></span>
+                      <span>{isAML ? 'Decreases AML probability (supports Healthy)' : 'Argues against Healthy (toward AML)'}</span>
+                    </div>
+                  </div>
+
+                  <div className="shap-category-legend">
+                    {Object.entries(categoryLabel).map(([key, val]) => (
+                      <div key={key} className="shap-cat-item">
+                        <span className="shap-cat-dot" style={{ background: val.color }}></span>
+                        <span className="shap-cat-label">{val.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <ResponsiveContainer width="100%" height={Math.max(320, binaryExplainData.length * 38)}>
+                    <BarChart
+                      data={binaryExplainData}
+                      layout="vertical"
+                      margin={{ left: 10, right: 50, top: 8, bottom: 8 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                      <XAxis
+                        type="number"
+                        tick={{ fontSize: 10, fill: '#94a3b8' }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => v.toFixed(2)}
+                        label={{ value: 'SHAP value', position: 'insideBottom', offset: -2, fontSize: 11, fill: '#94a3b8' }}
                       />
-                      <Bar dataKey="impact" radius={[0, 8, 8, 0]}>
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={210}
+                        tick={{ fontSize: 11, fill: '#374151' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <ReferenceLine x={0} stroke="#cbd5e1" strokeWidth={1.5} />
+                      <Tooltip content={<ShapTooltip isAML={isAML} />} />
+                      <Bar dataKey="impact" radius={[0, 4, 4, 0]}>
                         {binaryExplainData.map((entry, index) => (
-                          <Cell key={`cell-exp-${index}`} fill={entry.impact >= 0 ? '#dc2626' : '#2563eb'} />
+                          <Cell
+                            key={`cell-shap-${index}`}
+                            fill={
+                              (isAML ? entry.impact >= 0 : entry.impact < 0)
+                                ? '#dc2626'
+                                : '#16a34a'
+                            }
+                            fillOpacity={0.85}
+                          />
                         ))}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
-            )}
 
-            {isAML && subtypeExplainData.length > 0 && (
-              <div className="chart-card">
-                <h4>Key Factors Influencing Subtype Prediction</h4>
-                <p className="explain-note">
-                  Positive values support the predicted subtype. Negative values argue against it.
-                </p>
-                <div style={{ width: '100%', height: 420 }}>
-                  <ResponsiveContainer>
-                    <BarChart data={subtypeExplainData} layout="vertical" margin={{ left: 80, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis type="category" dataKey="name" width={180} />
-                      <Tooltip />
-                      <Bar dataKey="impact" radius={[0, 8, 8, 0]}>
-                        {subtypeExplainData.map((entry, index) => (
-                          <Cell key={`cell-subexp-${index}`} fill={entry.impact >= 0 ? '#7c3aed' : '#64748b'} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="chart-card">
+                  <div className="shap-table-wrapper">
+                    <div className="shap-table-title">Top Contributing Features — Detail View</div>
+                    <table className="shap-table">
+                      <thead>
+                        <tr>
+                          <th>Rank</th>
+                          <th>Feature</th>
+                          <th>Type</th>
+                          <th>Value</th>
+                          <th>SHAP</th>
+                          <th>Direction</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {binaryExplainData.map((row, i) => {
+                          const cat = categoryLabel[row.category];
+                          return (
+                            <tr key={i}>
+                              <td className="shap-rank">#{i + 1}</td>
+                              <td className="shap-feat-name">{row.name}</td>
+                              <td>
+                                <span
+                                  className="shap-cat-badge"
+                                  style={{
+                                    background: cat.color + '18',
+                                    color: cat.color,
+                                    border: `1px solid ${cat.color}40`,
+                                  }}
+                                >
+                                  {cat.label}
+                                </span>
+                              </td>
+                              <td className="shap-feat-val">
+                                {row.value != null ? Number(row.value).toFixed(3) : '—'}
+                              </td>
+                              <td
+                                className="shap-feat-shap"
+                                style={{
+                                  color: (isAML ? row.impact >= 0 : row.impact < 0)
+                                    ? '#dc2626'
+                                    : '#16a34a'
+                                }}
+                              >
+                                {row.impact >= 0 ? '+' : ''}{row.impact.toFixed(4)}
+                              </td>
+                              <td>
+                                <span className={`shap-direction ${
+                                  isAML
+                                    ? row.impact >= 0 ? 'dir-aml' : 'dir-healthy'
+                                    : row.impact >= 0 ? 'dir-healthy' : 'dir-aml'
+                                }`}>
+                                  {isAML
+                                    ? row.impact >= 0 ? '▲ AML' : '▼ Healthy'
+                                    : row.impact >= 0 ? '▲ Healthy' : '▼ AML'}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
+            {/* ── Clinical Note ── */}
             <div className="clinical-note-card">
-              <h4>Interpretation Note</h4>
+              <h4>⚕️ Interpretation Note</h4>
               <p>
-                This output is an AI model assessment based on hematological data and morphology-derived features.
-                It is intended for decision support and should be interpreted alongside clinical,
-                laboratory, and pathological review.
+                This result is AI-generated and intended for decision support only.
+                It does not constitute a clinical diagnosis and must be reviewed
+                alongside laboratory findings and pathological assessment.
               </p>
             </div>
 
+            {/* ── Actions ── */}
             <div className="analysis-actions">
               <button className="btn-secondary" onClick={handleRunAnalysis} disabled={analysisRunning}>
-                {analysisRunning ? (
-                  <>
-                    <span className="spinner-small"></span> Re-analyzing...
-                  </>
-                ) : (
-                  <>🔄 Re-run Analysis</>
-                )}
+                {analysisRunning
+                  ? <><span className="spinner-small"></span> Re-analyzing...</>
+                  : <>🔄 Re-run Analysis</>}
               </button>
-
               <button className="btn-primary" onClick={() => navigate('/patients')}>
                 Back to Patient List
               </button>
             </div>
+
           </div>
         )}
       </div>

@@ -1,69 +1,104 @@
-/* Navigation Bar Styles */
+/* ================================================================
+   NAVBAR
+   ================================================================ */
 
 .navbar {
   background: #ffffff;
   border-bottom: 2px solid #0066cc;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 1000;
+  overflow: hidden;
 }
 
 .navbar-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 70px;
+  height: 64px;
+  gap: 1rem;
 }
 
-/* Brand Section */
+
+/* ================================================================
+   BRAND
+   ================================================================ */
+
 .navbar-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-weight: 600;
-  font-size: 1.25rem;
-  color: #212529;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .brand-icon {
-    font-size: 1.75rem;
-    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+  font-size: 1.3rem;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #0066cc, #008b8b);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 102, 204, 0.25);
 }
 
 .brand-text {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
 }
 
-/* Navigation Menu */
+/* short version hidden by default, shown on small screens */
+.brand-text-short {
+  display: none;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+
+/* ================================================================
+   NAV MENU
+   ================================================================ */
+
 .navbar-menu {
   display: flex;
   list-style: none;
-  gap: 0.5rem;
+  gap: 0.25rem;
   margin: 0;
   padding: 0;
+  flex: 1;
+  justify-content: center;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   text-decoration: none;
-  color: #6c757d;
+  color: #64748b;
   font-weight: 500;
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
 }
 
 .nav-link:hover {
-  background: #f8f9fa;
+  background: #f1f5f9;
   color: #0066cc;
 }
 
@@ -74,58 +109,83 @@
 }
 
 .nav-icon {
-  font-size: 1.125rem;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .nav-label {
-  font-size: 0.9375rem;
+  font-size: 0.9rem;
 }
 
-/* User Section */
+
+/* ================================================================
+   USER
+   ================================================================ */
+
 .navbar-user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
 .user-name {
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: 0.8rem;
+  color: #64748b;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #0066cc, #008b8b);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.15s;
 }
 
 .user-avatar:hover {
   transform: scale(1.05);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .navbar-container {
-    padding: 0 1rem;
-  }
 
-  .navbar-menu {
-    gap: 0.25rem;
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+/* Medium — hide user name */
+@media (max-width: 900px) {
+  .user-name {
+    display: none;
   }
 
   .nav-link {
     padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
+  }
+}
+
+/* Small — hide nav labels, shorten brand */
+/* Small — hide nav labels, shorten brand */
+@media (max-width: 860px) {
+  .navbar-container {
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-text-short {
+    display: inline;
   }
 
   .nav-label {
@@ -133,14 +193,23 @@
   }
 
   .nav-icon {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 
-  .user-name {
-    display: none;
+  .nav-link {
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Extra small — tighten further */
+@media (max-width: 400px) {
+  .nav-link {
+    padding: 0.4rem 0.5rem;
   }
 
-  .brand-text {
-    display: none;
+  .brand-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 1.1rem;
   }
 }

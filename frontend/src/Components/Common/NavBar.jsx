@@ -14,10 +14,12 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className="navbar-brand">
+
+        <Link to="/" className="navbar-brand">
           <span className="brand-icon">🔬</span>
           <span className="brand-text">AML Diagnostic System</span>
-        </div>
+          <span className="brand-text-short">AML</span>
+        </Link>
 
         <ul className="navbar-menu">
           {navItems.map((item) => (
@@ -37,6 +39,7 @@ const Navbar = () => {
           <span className="user-name">Clinical User</span>
           <div className="user-avatar">CU</div>
         </div>
+
       </div>
     </nav>
   );
