@@ -1,5 +1,3 @@
-# aml-multimodal-fusion-system
-=======
 # Multimodal Fusion System for Acute Myeloid Leukaemia (AML) Detection
 
 A full-stack machine learning project for automated Acute Myeloid Leukaemia (AML) detection and subtype classification using peripheral blood smear image-derived features and patient-level haematological data.
