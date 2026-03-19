@@ -1,0 +1,290 @@
+/* Data Entry Container */
+.data-entry-container {
+  min-height: calc(100vh - 70px);
+  background: #f4f6f9;
+  padding: 2rem;
+}
+
+.data-entry-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Header */
+.entry-header {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-info h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.patient-id-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #e7f3ff;
+  color: #0066cc;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Progress Steps */
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex: 1;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.step.active {
+  background: #e7f3ff;
+  border: 2px solid #0066cc;
+}
+
+.step.completed {
+  background: #d4edda;
+  border: 2px solid #28a745;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dee2e6;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.step.active .step-number {
+  background: #0066cc;
+  color: white;
+}
+
+.step.completed .step-number {
+  background: #28a745;
+  color: white;
+}
+
+.step-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.step.active .step-label {
+  color: #0066cc;
+  font-weight: 600;
+}
+
+.step.completed .step-label {
+  color: #28a745;
+}
+
+.check-icon {
+  margin-left: auto;
+  font-size: 1.25rem;
+  color: #28a745;
+}
+
+.step-divider {
+  width: 40px;
+  height: 2px;
+  background: #dee2e6;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.tab-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  border-color: #0066cc;
+  color: #0066cc;
+}
+
+.tab-button.active {
+  background: #0066cc;
+  border-color: #0066cc;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.2);
+}
+
+.tab-button.completed {
+  border-color: #28a745;
+}
+
+.tab-button.completed:not(.active) {
+  background: #f0f9f4;
+}
+
+.tab-icon {
+  font-size: 1.5rem;
+}
+
+.tab-text {
+  font-weight: 600;
+}
+
+.tab-check {
+  margin-left: auto;
+  font-size: 1.25rem;
+  color: #28a745;
+}
+
+.tab-button.active .tab-check {
+  color: white;
+}
+
+/* Tab Content */
+.tab-content {
+  margin-bottom: 2rem;
+}
+
+/* Completion Banner */
+.completion-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+  border: 2px solid #28a745;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+.completion-icon {
+  font-size: 2.5rem;
+}
+
+.completion-text {
+  flex: 1;
+}
+
+.completion-text strong {
+  display: block;
+  font-size: 1.125rem;
+  color: #155724;
+  margin-bottom: 0.25rem;
+}
+
+.completion-text p {
+  font-size: 0.9375rem;
+  color: #155724;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .data-entry-container {
+    padding: 1rem;
+  }
+
+  .entry-header {
+    padding: 1.5rem;
+  }
+
+  .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-info h2 {
+    font-size: 1.5rem;
+  }
+
+  .progress-steps {
+    flex-direction: column;
+  }
+
+  .step-divider {
+    width: 2px;
+    height: 40px;
+  }
+
+  .tab-navigation {
+    flex-direction: column;
+  }
+
+  .tab-button {
+    padding: 1rem;
+  }
+
+  .tab-icon {
+    font-size: 1.25rem;
+  }
+
+  .completion-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

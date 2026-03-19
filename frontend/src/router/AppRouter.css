@@ -1,0 +1,22 @@
+
+/* Coming Soon Placeholder */
+.coming-soon {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.coming-soon h2 {
+  font-size: 2rem;
+  color: #212529;
+  margin-bottom: 1rem;
+}
+
+.coming-soon p {
+  font-size: 1.125rem;
+  color: #6c757d;
+}

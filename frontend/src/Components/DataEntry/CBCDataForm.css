@@ -1,0 +1,332 @@
+/* CBC Data Form - Clean Version */
+.cbc-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.form-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.form-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+  margin: 0 0 0.5rem 0;
+}
+
+.form-subtitle {
+  font-size: 0.9375rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Field Group Sections */
+.field-group-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #0066cc;
+}
+
+.group-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0066cc;
+  margin: 0 0 1rem 0;
+}
+
+/* CBC Fields Grid */
+.cbc-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.cbc-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.cbc-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.required {
+  color: #dc3545;
+}
+
+/* Input Wrapper */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cbc-input {
+  flex: 1;
+  padding: 0.75rem 4rem 0.75rem 1rem;
+  font-size: 0.9375rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: 'Monaco', 'Courier New', monospace;
+  background: white;
+}
+
+.cbc-input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.cbc-input.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+/* Unit Label */
+.unit-label {
+  position: absolute;
+  right: 1rem;
+  font-size: 0.8125rem;
+  color: #6c757d;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Field Info */
+.field-info {
+  margin-top: 0.375rem;
+}
+
+.error-message {
+  font-size: 0.75rem;
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Total Display */
+.total-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border: 2px solid #dee2e6;
+}
+
+.total-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.total-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Monaco', 'Courier New', monospace;
+  color: #212529;
+}
+
+/* Submit Error */
+.submit-error {
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9375rem;
+}
+
+/* Total Display with Hints */
+.total-display {
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 24px 0;
+  border: 2px solid #e5e7eb;
+}
+
+.total-display.warning {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.total-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.total-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.total-hint {
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.total-hint.success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.total-hint.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.total-hint.info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.form-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e9ecef;
+}
+
+.btn-cancel,
+.btn-submit-cbc {
+  flex: 1;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: #f8f9fa;
+  color: #495057;
+  border: 2px solid #dee2e6;
+}
+
+.btn-cancel:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.btn-submit-cbc {
+  background: #28a745;
+  color: white;
+}
+
+.btn-submit-cbc:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Scrollbar */
+.cbc-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cbc-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.cbc-form::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.cbc-form::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Disable scroll-to-change for number inputs */
+input[type="number"]:focus {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button:focus,
+input[type="number"]::-webkit-outer-spin-button:focus {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cbc-form {
+    padding: 1.5rem;
+    max-height: 85vh;
+  }
+
+  .field-group-section {
+    padding: 1rem;
+  }
+
+  .cbc-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .total-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .unit-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}

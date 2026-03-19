@@ -1,0 +1,76 @@
+# -------------------------
+# Environment files
+# -------------------------
+frontend/.env
+backend/.env
+.env
+*.env
+**/.env
+
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+backend/venv/
+
+# -------------------------
+# Uploads, runs, generated artifacts
+# -------------------------
+backend/uploads/
+runs/
+backend/ml_models/*.pkl
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.ckpt
+
+# Jupyter
+.ipynb_checkpoints/
+
+# -------------------------
+# Node / frontend
+# -------------------------
+node_modules/
+frontend/node_modules/
+dist/
+build/
+.frontend-build/
+.cache/
+frontend/dist/
+
+# -------------------------
+# Logs
+# -------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# -------------------------
+# Editor / OS files
+# -------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

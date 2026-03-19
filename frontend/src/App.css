@@ -1,0 +1,79 @@
+/* ===== Layout ===== */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ===== Navbar ===== */
+.navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1.5rem;
+}
+
+.navbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ===== Navigation ===== */
+.nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 500;
+  color: #374151;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: #e5e7eb;
+}
+
+.nav-link.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* ===== Page Card ===== */
+section {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .navbar-inner {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .page {
+    padding: 1rem;
+  }
+}
