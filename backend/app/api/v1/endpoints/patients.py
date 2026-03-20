@@ -9,6 +9,7 @@ from app.models.patient import AnalysisResult, Image, Patient
 from app.models.patient import CBCData as CBCDataModel
 from app.schemas import CBCData, CBCDataCreate, PatientCreate, PatientResponse
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -64,78 +65,73 @@ async def create_patient(patient: PatientCreate, db: Session = Depends(get_db)):
     )
 
 
-def get_patient_status(patient_id: str, db: Session) -> dict:
-    # Check CBC data
-    has_cbc = db.query(CBCDataModel).filter(
-        CBCDataModel.patient_id == patient_id
-    ).first() is not None
-    
-    # Check images
-    image_count = db.query(Image).filter(
-        Image.patient_id == patient_id
-    ).count()
-    
-    has_images = image_count > 0
-
-    has_analysis = db.query(AnalysisResult).filter(
-        AnalysisResult.patient_id == patient_id
-    ).first() is not None
-    
-    # Determine status
-    if not has_cbc:
-        status = "Pending Haematology Data"
-    elif not has_images:
-        status = "Pending Images"
-    elif has_analysis:
-        status = "Analysis Complete"
-    else:
-        status = "Ready for Analysis"
-    
-    prediction = None
-    confidence = None
-    subtype_prediction = None  
-    analysis = db.query(AnalysisResult).filter(
-        AnalysisResult.patient_id == patient_id
-    ).first()
-    
-    if analysis:
-        prediction = analysis.prediction
-        confidence = analysis.confidence
-
-        # Extract subtype from stored JSON if AML
-        if analysis.prediction == "AML" and analysis.cbc_features:
-            try:
-                cbc_features_json = json.loads(analysis.cbc_features)
-                subtype_result = cbc_features_json.get("subtype_result")
-                if subtype_result:
-                    subtype_prediction = subtype_result.get("predicted_subtype")
-            except Exception:
-                pass
-    
-    return {
-        "status": status,
-        "has_cbc": has_cbc,
-        "has_images": has_images,
-        "has_analysis": has_analysis,
-        "image_count": image_count,
-        "prediction": prediction,
-        "confidence": confidence,  
-        "subtype_prediction": subtype_prediction, 
-    }
-
-
 @router.get("")
 async def get_patients(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
-    """Get list of all patients from MySQL"""
+    """Get list of all patients — optimised with bulk joins"""
 
     total = db.query(Patient).count()
     patients = db.query(Patient).order_by(Patient.created_at.desc()).offset(skip).limit(limit).all()
-    
-    # Check CBC status for each patient
+
+    if not patients:
+        return {"total": total, "skip": skip, "limit": limit, "patients": []}
+
+    patient_ids = [p.patient_id for p in patients]
+
+    # Bulk fetch all related data in 3 queries instead of 4N queries
+    cbc_ids = {
+        row.patient_id
+        for row in db.query(CBCDataModel.patient_id)
+        .filter(CBCDataModel.patient_id.in_(patient_ids))
+        .all()
+    }
+
+    image_counts = {
+        row.patient_id: row.count
+        for row in db.query(Image.patient_id, func.count(Image.id).label("count"))
+        .filter(Image.patient_id.in_(patient_ids))
+        .group_by(Image.patient_id)
+        .all()
+    }
+
+    analyses = {
+        row.patient_id: row
+        for row in db.query(AnalysisResult)
+        .filter(AnalysisResult.patient_id.in_(patient_ids))
+        .all()
+    }
+
     patient_list = []
     for p in patients:
-        patient_status = get_patient_status(p.patient_id, db)
-        
+        has_cbc = p.patient_id in cbc_ids
+        image_count = image_counts.get(p.patient_id, 0)
+        has_images = image_count > 0
+        analysis = analyses.get(p.patient_id)
+        has_analysis = analysis is not None
+
+        if not has_cbc:
+            status = "Pending Haematology Data"
+        elif not has_images:
+            status = "Pending Images"
+        elif has_analysis:
+            status = "Analysis Complete"
+        else:
+            status = "Ready for Analysis"
+
+        prediction = None
+        confidence = None
+        subtype_prediction = None
+
+        if analysis:
+            prediction = analysis.prediction
+            confidence = analysis.confidence
+            if analysis.prediction == "AML" and analysis.cbc_features:
+                try:
+                    features_json = json.loads(analysis.cbc_features)
+                    subtype_result = features_json.get("subtype_result")
+                    if subtype_result:
+                        subtype_prediction = subtype_result.get("predicted_subtype")
+                except Exception:
+                    pass
 
         patient_list.append({
             "patient_id": p.patient_id,
@@ -143,16 +139,16 @@ async def get_patients(db: Session = Depends(get_db), skip: int = 0, limit: int 
             "sex": p.sex,
             "sample_date": p.sample_date,
             "created_at": p.created_at,
-            "status": patient_status["status"],
-            "has_cbc": patient_status["has_cbc"],
-            "has_images": patient_status["has_images"],
-            "has_analysis": patient_status["has_analysis"],
-            "image_count": patient_status["image_count"],
-            "prediction": patient_status["prediction"],  
-            "confidence": patient_status["confidence"], 
-            "subtype_prediction": patient_status["subtype_prediction"], 
+            "status": status,
+            "has_cbc": has_cbc,
+            "has_images": has_images,
+            "has_analysis": has_analysis,
+            "image_count": image_count,
+            "prediction": prediction,
+            "confidence": confidence,
+            "subtype_prediction": subtype_prediction,
         })
-    
+
     return {
         "total": total,
         "skip": skip,
@@ -291,8 +287,21 @@ async def get_patient_data(patient_id: str, db: Session = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
-    # Get patient status
-    patient_status = get_patient_status(patient_id, db)
+    # Derive patient status inline
+    has_cbc = db.query(CBCDataModel).filter(CBCDataModel.patient_id == patient_id).first() is not None
+    has_images = db.query(Image).filter(Image.patient_id == patient_id).count() > 0
+    has_analysis = db.query(AnalysisResult).filter(AnalysisResult.patient_id == patient_id).first() is not None
+
+    if not has_cbc:
+        status = "Pending Haematology Data"
+    elif not has_images:
+        status = "Pending Images"
+    elif has_analysis:
+        status = "Analysis Complete"
+    else:
+        status = "Ready for Analysis"
+
+    patient_status = {"status": status}
     
     # Get CBC data
     cbc_data = db.query(CBCDataModel).filter(CBCDataModel.patient_id == patient_id).first()
