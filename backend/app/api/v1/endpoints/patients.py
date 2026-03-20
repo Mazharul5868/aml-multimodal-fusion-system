@@ -4,13 +4,12 @@ Patient management endpoints
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
 from app.db.database import get_db
 from app.models.patient import AnalysisResult, Image, Patient
 from app.models.patient import CBCData as CBCDataModel
 from app.schemas import CBCData, CBCDataCreate, PatientCreate, PatientResponse
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -381,6 +380,7 @@ async def get_patient_data(patient_id: str, db: Session = Depends(get_db)):
                 "id": img.id,
                 "filename": img.filename,
                 "original_filename": img.original_filename,
+                "filepath": img.filepath,
                 "file_type": img.file_type,
                 "file_size": img.file_size,
                 "uploaded_at": img.uploaded_at

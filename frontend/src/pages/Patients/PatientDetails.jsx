@@ -310,7 +310,7 @@ const PatientDetails = () => {
                     </div>
                   ) : (
                     <img
-                      src={`${BASE_URL}/uploads/images/${patientId}/${image.filename}`}
+                      src={image.filepath}
                       alt={image.original_filename}
                     />
                   )}
