@@ -4,7 +4,7 @@ import Analysis from "../pages/Analysis";
 import Home from "../pages/Home";
 import Labels from "../pages/Labels";
 // Patients pages
-import PatientDataEntry from "../components/DataEntry/PatientDataEntry";
+import PatientDataEntry from "../Components/DataEntry/PatientDataEntry";
 import PatientDetails from "../pages/Patients/PatientDetails";
 import PatientList from "../pages/Patients/PatientList";
 
