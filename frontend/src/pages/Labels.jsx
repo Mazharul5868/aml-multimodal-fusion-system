@@ -20,6 +20,8 @@ const Labels = () => {
   const [exportMsg, setExportMsg] = useState(null);
   const PATIENTS_PER_PAGE = 20;
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -31,7 +33,7 @@ const Labels = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/patients');
+      const response = await fetch(`{BASE_URL}/api/v1/patients`);
       const data = await response.json();
       const allPatients = data.patients || [];
 

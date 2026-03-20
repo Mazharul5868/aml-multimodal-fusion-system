@@ -22,7 +22,7 @@ const PatientList = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await fetch('{BASE_URL}/api/v1/patients');
+      const response = await fetch(`{BASE_URL}/api/v1/patients`);
       const data = await response.json();
       setPatients(data.patients || []);
       setCurrentPage(1);
@@ -38,7 +38,7 @@ const PatientList = () => {
 
   const handleCreatePatient = async (patientData) => {
     try {
-      const response = await fetch('{BASE_URL}/api/v1/patients', {
+      const response = await fetch(`{BASE_URL}/api/v1/patients`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

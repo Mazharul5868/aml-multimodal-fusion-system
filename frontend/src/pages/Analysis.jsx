@@ -33,7 +33,7 @@ const Analysis = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await fetch('${BASE_URL}/api/v1/patients');
+      const response = await fetch(`${BASE_URL}/api/v1/patients`);
       const data = await response.json();
       setPatients(data.patients || []);
       setCurrentPage(1);
