@@ -719,3 +719,60 @@
   background: #f0fdf4;
   color: #16a34a;
 }
+
+/* ================================================================
+   MOBILE RESPONSIVE — ANALYSIS SECTION
+   ================================================================ */
+
+@media (max-width: 768px) {
+  .prediction-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    min-width: 0;
+    overflow-x: visible;
+  }
+
+  .banner-right {
+    text-align: left;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .banner-confidence {
+    font-size: 1.6rem;
+  }
+
+  .banner-verdict {
+    font-size: 1.4rem;
+  }
+
+  .chart-card {
+    padding: 16px;
+    margin-top: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+  }
+
+  .shap-legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .shap-category-legend {
+    gap: 10px;
+  }
+
+  .shap-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .analysis-results {
+    padding: 0;
+  }
+}
