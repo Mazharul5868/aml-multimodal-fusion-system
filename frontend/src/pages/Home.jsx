@@ -7,8 +7,10 @@ const Home = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/patients?limit=1000')
+    fetch('${BASE_URL}/api/v1/patients?limit=1000')
       .then((res) => res.json())
       .then((data) => setPatients(data.patients || []))
       .catch((err) => console.error('Failed to load patients:', err))

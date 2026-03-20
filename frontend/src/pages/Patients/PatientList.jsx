@@ -12,6 +12,8 @@ const PatientList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PATIENTS_PER_PAGE = 20;
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   // Fetch patients from API
   useEffect(() => {
     fetchPatients();
@@ -20,7 +22,7 @@ const PatientList = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/patients');
+      const response = await fetch('{BASE_URL}/api/v1/patients');
       const data = await response.json();
       setPatients(data.patients || []);
       setCurrentPage(1);
@@ -36,7 +38,7 @@ const PatientList = () => {
 
   const handleCreatePatient = async (patientData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/patients', {
+      const response = await fetch('{BASE_URL}/api/v1/patients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

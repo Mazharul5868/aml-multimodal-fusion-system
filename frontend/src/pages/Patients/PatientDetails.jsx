@@ -15,6 +15,8 @@ const PatientDetails = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   useEffect(() => {
     fetchPatientData();
   }, [patientId]);
@@ -22,7 +24,7 @@ const PatientDetails = () => {
   const fetchPatientData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/patients/${patientId}/data`);
+      const response = await fetch(`{BASE_URL}/api/v1/patients/${patientId}/data`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -44,7 +46,7 @@ const PatientDetails = () => {
     try {
       setAnalysisRunning(true);
 
-      const response = await fetch(`http://localhost:8000/api/v1/analysis/${patientId}/analyse-aml`, {
+      const response = await fetch(`{BASE_URL}/api/v1/analysis/${patientId}/analyse-aml`, {
         method: 'POST',
       });
 
@@ -308,7 +310,7 @@ const PatientDetails = () => {
                     </div>
                   ) : (
                     <img
-                      src={`http://localhost:8000/uploads/images/${patientId}/${image.filename}`}
+                      src={`{BASE_URL}/uploads/images/${patientId}/${image.filename}`}
                       alt={image.original_filename}
                     />
                   )}

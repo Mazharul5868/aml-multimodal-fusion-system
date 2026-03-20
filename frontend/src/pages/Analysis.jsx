@@ -16,6 +16,8 @@ const Analysis = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PATIENTS_PER_PAGE = 20;
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   useEffect(() => {
     const incoming = location.state?.filter;
     if (incoming === 'Analysis Complete') setActiveFilter('Analysis Complete');
@@ -31,7 +33,7 @@ const Analysis = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/patients');
+      const response = await fetch('${BASE_URL}/api/v1/patients');
       const data = await response.json();
       setPatients(data.patients || []);
       setCurrentPage(1);
@@ -49,7 +51,7 @@ const Analysis = () => {
     try {
       setRunningAnalysis(patientId);
       const response = await fetch(
-        `http://localhost:8000/api/v1/analysis/${patientId}/analyse-aml`,
+        `${BASE_URL}/api/v1/analysis/${patientId}/analyse-aml`,
         { method: 'POST' }
       );
       if (!response.ok) {

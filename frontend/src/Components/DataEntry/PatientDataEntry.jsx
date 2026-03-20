@@ -16,6 +16,8 @@ const PatientDataEntry = () => {
   const [cbcCompleted, setCbcCompleted] = useState(false);
   const [imagesCompleted, setImagesCompleted] = useState(false);
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
   // Fetch patient status on mount
   useEffect(() => {
     fetchPatientStatus();
@@ -23,7 +25,7 @@ const PatientDataEntry = () => {
 
   const fetchPatientStatus = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/patients`);
+      const response = await fetch(`${BASE_URL}/api/v1/patients`);
       const data = await response.json();
       
       // Find current patient
@@ -47,7 +49,7 @@ const PatientDataEntry = () => {
 
   const handleCBCSubmit = async (cbcData) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/patients/${patientId}/cbc`, {
+      const response = await fetch(`${BASE_URL}/api/v1/patients/${patientId}/cbc`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +75,7 @@ const PatientDataEntry = () => {
 
   const handleImageUpload = async (formData) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/images/${patientId}/upload`, {
+      const response = await fetch(`${BASE_URL}/api/v1/images/${patientId}/upload`, {
         method: 'POST',
         body: formData,
       });
