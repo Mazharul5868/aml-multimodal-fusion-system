@@ -1,6 +1,8 @@
 import json
 import os
+import tempfile
 import time
+import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -290,6 +292,14 @@ def aggregate_patient_features(per_image_features: List[Dict[str, float]]) -> Di
         aggregated[key] = float(np.median(vals)) if vals else 0.0
     return aggregated
 
+def download_image_to_temp(url: str) -> str:
+    """Download image from Cloudinary URL to a temp file and return local path."""
+    suffix = '.' + url.split('.')[-1].split('?')[0]
+    if suffix not in ('.jpg', '.jpeg', '.png', '.tif', '.tiff'):
+        suffix = '.jpg'
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    urllib.request.urlretrieve(url, tmp.name)
+    return tmp.name
 
 def get_patient_image_paths(db: Session, patient_id: str) -> List[str]:
     images = (
@@ -308,7 +318,8 @@ def get_patient_morphology_features(db: Session, patient_id: str) -> Dict[str, f
     per_image_features, failures = [], []
     for image_path in image_paths:
         try:
-            per_image_features.append(extract_morphology_features_from_image(image_path))
+            local_path = download_image_to_temp(image_path) if image_path.startswith('http') else image_path
+            per_image_features.append(extract_morphology_features_from_image(local_path))
         except Exception as e:
             failures.append({"image_path": image_path, "error": str(e)})
     if not per_image_features:

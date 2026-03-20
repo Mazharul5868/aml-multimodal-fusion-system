@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     HF_REPO_ID: str | None = None
     HF_TOKEN: str | None = None
     
+    CLOUDINARY_CLOUD_NAME: str | None = None
+    CLOUDINARY_API_KEY: str | None = None
+    CLOUDINARY_API_SECRET: str | None = None
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
