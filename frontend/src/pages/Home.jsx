@@ -7,7 +7,7 @@ const Home = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetch(`${BASE_URL}/api/v1/patients?limit=1000`)

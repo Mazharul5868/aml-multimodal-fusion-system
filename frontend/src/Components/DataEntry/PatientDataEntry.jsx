@@ -16,7 +16,7 @@ const PatientDataEntry = () => {
   const [cbcCompleted, setCbcCompleted] = useState(false);
   const [imagesCompleted, setImagesCompleted] = useState(false);
 
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Fetch patient status on mount
   useEffect(() => {
